@@ -19,6 +19,12 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
 - Adaptive content width
 - Support custom themes
 
+** DEMO
+
+[[./images/figure1.png][DEMO]]
+
+[[./images/figure2.png][DEMO]]
+
 ** Installation
 
 *** Using straight.el

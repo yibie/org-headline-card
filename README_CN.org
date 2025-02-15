@@ -17,7 +17,11 @@
 - 支持自定义主题
 - 将链接从正文中提取，以灰色字体列表形式显示在卡片底部
 
-** 安装
+** DEMO
+
+[[./images/figure3.png][DEMO]]
+
+[[./images/figure4.png][DEMO]]
 
 *** 使用 straight.el
 #+begin_src emacs-lisp
