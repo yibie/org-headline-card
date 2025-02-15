@@ -49,7 +49,7 @@
   :type 'directory
   :group 'org-headline-card)
 
-(defcustom org-headline-card-max-width 60
+(defcustom org-headline-card-max-width 80
   "Maximum width of the card content in characters.
 If content is shorter, the card will be narrower."
   :type 'integer
@@ -272,137 +272,130 @@ Returns a string with proper formatting for both lists and paragraphs."
           (message "清理后内容:\n%s" raw-content)
           raw-content)))))
 
+(defun org-headline-card--protect-urls (text)
+  "Protect URLs in TEXT from being processed as markup.
+Handles both direct URLs and org-mode link syntax.
+Returns a cons cell (TEXT . LINKS) where LINKS is a list of collected links."
+  (let ((links '())
+        (link-counter 0)
+        (result text))
+    ;; 处理直接的URL
+    (setq result
+          (replace-regexp-in-string
+           "\\(https?://[^\s<>\"]+\\)"
+           (lambda (match)
+             (let* ((url (match-string 1 match))
+                    (placeholder (format "@@URL_%d@@" link-counter)))
+               (push (cons placeholder url) links)
+               (cl-incf link-counter)
+               url))  ; 返回原URL，不使用占位符
+           result))
+    
+    ;; 处理org-mode格式的链接
+    (setq result
+          (replace-regexp-in-string
+           "\\[\\[\\(https?://[^][\n]+?\\)\\]\\[\\([^][\n]+?\\)\\]\\]"
+           (lambda (match)
+             (let* ((url (match-string 1 match))
+                    (desc (match-string 2 match))
+                    (placeholder (format "@@LINK_%d@@" link-counter)))
+               (push (cons placeholder (cons desc url)) links)
+               (cl-incf link-counter)
+               desc))  ; 只返回描述文本
+           result))
+    
+    ;; 返回处理后的文本和收集的链接
+    (cons result (nreverse links))))
+
 (defun org-headline-card--split-content (content)
   "Split CONTENT into properly formatted lines while preserving order.
 Convert org-mode markup to PlantUML format while preserving list structure."
   (message "开始分割内容:\n%s" content)
-  (let* ((paragraphs (split-string content "\n\n+" t))
+  (let* ((lines (split-string content "\n" t))  ; 按行分割，而不是段落
          (result '())
-         (links '())  ; 存储所有链接
-         (link-counter 0))
-    (dolist (para paragraphs)
-      (let ((processed-para
-             (thread-last para
-               ;; 处理列表标记
-               (replace-regexp-in-string
-                "^\\s-*[-*+]\\s-*"
-                "• ")
-               
-               ;; 提取链接并替换为占位符
-               (replace-regexp-in-string
-                "\\[\\[\\(http[s]?://[^]]+?\\)\\]\\[\\([^]]+?\\)\\]\\]"
-                (lambda (match)
-                  (let* ((url (match-string 1 match))
-                         (desc (match-string 2 match))
-                         (placeholder (format "@@LINK_%d@@" link-counter)))
-                    ;; 保存链接信息
-                    (push (cons placeholder (cons desc url)) links)
-                    (cl-incf link-counter)
-                    desc)))  ; 只返回描述文本
-               
-               ;; 处理粗体
-               (replace-regexp-in-string
-                "\\*\\([^*\n]+?\\)\\*"
-                "<b>\\1</b>")
-               
-               ;; 处理斜体（避免误匹配路径中的斜杠）
-               (replace-regexp-in-string
-                "\\(?:^\\|[^/]\\)/\\([^/\n]+?\\)/\\(?:$\\|[^/]\\)"
-                "\\1<i>\\2</i>")
-               
-               ;; 处理下划线
-               (replace-regexp-in-string
-                "_\\([^_\n]+?\\)_"
-                "<u>\\1</u>")
-               
-               ;; 处理删除线
-               (replace-regexp-in-string
-                "\\+\\([^+\n]+?\\)\\+"
-                "<s>\\1</s>")
-               
-               ;; 处理代码和等宽字体
-               (replace-regexp-in-string
-                "\\(?:~\\|=\\)\\([^~=\n]+?\\)\\(?:~\\|=\\)"
-                "<code>\\1</code>"))))
+         (all-links '()))
+    (dolist (line lines)
+      (let* ((protected (org-headline-card--protect-urls line))
+             (processed-text (car protected))
+             (para-links (cdr protected))
+             ;; 先处理所有格式标记
+             (marked-text
+              (thread-last processed-text
+                ;; 处理列表标记
+                (replace-regexp-in-string
+                 "^\\s-*[-*+]\\s-*"
+                 "• ")
+                
+                ;; 处理粗体
+                (replace-regexp-in-string
+                 "\\*\\([^*\n]+?\\)\\*"
+                 "<b>\\1</b>")
+                
+                ;; 处理斜体（避免匹配URL）
+                (replace-regexp-in-string
+                 "\\(?:^\\|[^/:a-zA-Z0-9]\\)/\\([^/\n]+?\\)/\\(?:$\\|[^/:a-zA-Z0-9]\\)"
+                 "\\1<i>\\2</i>")
+                
+                ;; 处理下划线
+                (replace-regexp-in-string
+                 "_\\([^_\n]+?\\)_"
+                 "<u>\\1</u>")
+                
+                ;; 处理删除线
+                (replace-regexp-in-string
+                 "\\+\\([^+\n]+?\\)\\+"
+                 "\\1")
+                
+                ;; 处理代码和等宽字体
+                (replace-regexp-in-string
+                 "\\(?:~\\|=\\)\\([^~=\n]+?\\)\\(?:~\\|=\\)"
+                 "<code>\\1</code>"))))
         
-        (message "处理段落:\n%s\n变为:\n%s" para processed-para)
-        (push processed-para result)))
+        ;; 处理长行换行
+        (with-temp-buffer
+          (insert marked-text)
+          (let ((fill-column org-headline-card-max-width))
+            (fill-region (point-min) (point-max)))
+          
+          ;; 收集处理后的行
+          (goto-char (point-min))
+          (while (not (eobp))
+            (let* ((current-line (buffer-substring-no-properties
+                                (line-beginning-position)
+                                (line-end-position)))
+                   (is-continuation (and (> (line-number-at-pos) 1)
+                                       (string-match-p "^\\s-*•" line)))
+                   (formatted-line
+                    (if is-continuation
+                        (concat "  " current-line)  ; 续行缩进
+                      current-line)))
+              (push formatted-line result))
+            (forward-line 1)))
+        
+        (setq all-links (append para-links all-links))))
     
-    ;; 添加链接到结果，不添加额外空行
-    (when links
-      (dolist (link (nreverse links))
-        (push (format "  <size:12><color:#666666>%s</color>" 
-                     (cddr link))
-              result)))
+    ;; 添加链接到结果
+    (when all-links
+      (dolist (link (nreverse all-links))
+        (when (consp (cdr link))  ; 只添加带描述的链接到底部
+          (push (format "  <size:12><color:#666666>%s</color>" 
+                       (cddr link))
+                result))))
     
     (let ((final-result (nreverse result)))
       (message "分割后内容:\n%s" (mapconcat #'identity final-result "\n"))
       final-result)))
-      
+
 (defun org-headline-card--wrap-line (line width)
-  "Wrap LINE at WIDTH characters, preserving format and readability.
-Handles both list items and normal text differently, with proper indentation
-and line breaks for Chinese text."
-  (message "开始换行处理:\n%s" line)
-  (with-temp-buffer
-    (let* ((fill-column (- width 4))  ; 减少填充宽度以适应缩进
-           (result '())
-           (is-list-item (string-match-p "^\\s-*•" line)))
-      
-      ;; 设置中文文本的填充属性
-      (setq-local word-wrap-by-category t)
-      (setq-local word-separating-categories
-                  '((?C . ?C)   ; 在中文字符间允许换行
-                    (?c . ?c)))
-      
-      ;; 处理列表项
-      (if is-list-item
-          ;; 列表项处理
-          (let* ((items (split-string line "• \\s-*" t))
-                 (indent "  "))
-            ;; 处理每个列表项
-            (dolist (item items)
-              (unless (string-empty-p item)
-                ;; 插入并填充当前项
-                (erase-buffer)
-                (insert item)
-                (fill-region (point-min) (point-max))
-                
-                ;; 收集处理后的行
-                (goto-char (point-min))
-                (let ((first-line t))
-                  (while (not (eobp))
-                    (let ((current-line (buffer-substring (line-beginning-position)
-                                                        (line-end-position))))
-                      (push (concat 
-                             (if first-line
-                                 "• "  ; 第一行使用项目符号
-                               indent) ; 后续行使用缩进
-                             current-line)
-                            result)
-                      (setq first-line nil))
-                    (forward-line 1))))))
-        
-        ;; 普通段落处理
-        (insert line)
-        (fill-region (point-min) (point-max))
-        
-        ;; 收集处理后的行
-        (goto-char (point-min))
-        (while (not (eobp))
-          (let* ((current-line (buffer-substring (line-beginning-position)
-                                               (line-end-position)))
-                 ;; 普通段落：第一行不缩进，后续行缩进
-                 (indented-line (if (= (line-number-at-pos) 1)
-                                  current-line
-                                (concat "  " current-line))))
-            (push indented-line result))
-          (forward-line 1)))
-      
-      ;; 返回处理后的行列表
-      (let ((final-result (nreverse result)))
-        (message "换行后内容:\n%s" (mapconcat #'identity final-result "\n"))
-        final-result))))
+  "Format LINE with proper indentation.
+WIDTH is kept for compatibility but no longer used for wrapping."
+  (message "开始格式化:\n%s" line)
+  (let ((is-list-item (string-match-p "^\\s-*•" line)))
+    (if is-list-item
+        ;; 列表项：保持原样
+        (list line)
+      ;; 普通文本：直接返回
+      (list line))))
 
 (defun org-headline-card--process-title (title)
   "Process the title string for PlantUML."
