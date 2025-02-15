@@ -1,0 +1,106 @@
+
+[[./README_CN.org][中文版使用说明]]
+
+* Org Headline Card
+
+Convert Org-mode headlines and their contents into beautiful visual cards.
+
+** Features
+
+- Convert Org headlines into visual cards
+- Support Org markup syntax (bold, italic, links, etc.)
+- Multiple pre-designed themes:
+  - Modern Chinese style (chinese-modern)
+  - Ink painting style (chinese-ink)
+  - Traditional screen style (chinese-screen)
+  - Light theme (light)
+  - Dark theme (dark)
+  - Warm theme (warm)
+- Adaptive content width
+- Support custom themes
+
+** Installation
+
+*** Using straight.el
+#+begin_src emacs-lisp
+(straight-use-package
+ '(org-headline-card :type git
+                     :host github
+                     :repo "yibie/org-headline-card"))
+#+end_src
+
+*** Using use-package
+#+begin_src emacs-lisp
+(use-package org-headline-card
+  :straight (org-headline-card :type git
+                              :host github
+                              :repo "yibie/org-headline-card"))
+#+end_src
+
+** Basic Usage
+
+1. Move cursor to any Org headline
+2. Execute =M-x org-headline-card-at-point=
+3. Generated card images will be saved in =~/.emacs.d/headline-cards/=
+
+** Theme 
+
+*** Built-in Themes
+
+Six carefully designed themes are available:
+
+- chinese-modern :: Modern Chinese style, ideal for general documentation
+- chinese-ink :: Ink painting style, perfect for poetry and prose
+- chinese-screen :: Traditional screen style, suitable for classical texts
+- light :: Light theme, great for daily use
+- dark :: Dark theme, optimal for night mode
+- warm :: Warm theme, comfortable for extended reading
+
+Switch theme:
+
+Use `M-x org-headline-card-set-theme` to switch theme
+
+You can also add common themes to your emacs configuration file, for example: 
+
+#+begin_src emacs-lisp
+(org-headline-card-set-theme 'chinese-ink)
+#+end_src
+
+*** Custom Themes
+
+**** Adjust Base Parameters
+#+begin_src emacs-lisp
+(setq org-headline-card-base-theme
+      '((dpi . "300")                     ; Image resolution
+        (padding . "40")                  ; Padding
+        (roundCorner . "40")             ; Corner radius
+        (titleFontSize . "32")           ; Title font size
+        (contentFontSize . "26")))       ; Content font size
+#+end_src
+
+**** Create Personal Theme
+#+begin_src emacs-lisp
+;; Add a light purple theme
+(add-to-list 'org-headline-card-themes
+             '(purple-light . ((defaultFontName . "Microsoft YaHei")
+                              (defaultFontSize . "16")
+                              (backgroundColor . "#F8F5FF")
+                              (rectangleBorderColor . "#E6E0F3")
+                              (rectangleFontColor . "#2C2C2C")
+                              (rectangleBackgroundColor . "#FDFAFF"))))
+#+end_src
+
+** Dependencies
+
+- Emacs 27.1+
+- Org-mode 9.4+
+- Java Runtime Environment
+- PlantUML
+
+** License
+
+GPL-3.0 or later
+
+** Contributing
+
+Issues and Pull Requests are welcome! 

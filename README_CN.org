@@ -1,0 +1,102 @@
+* Org Headline Card
+
+将 Org-mode 标题及其内容转换为精美的预览卡片图片。
+
+** 功能特点
+
+- 将 Org 标题转换为可视化卡片
+- 支持 Org 标记语法（粗体、斜体、链接等）
+- 多种预设主题风格
+  - 现代中文风格 (chinese-modern)
+  - 水墨风格 (chinese-ink)
+  - 屏风风格 (chinese-screen)
+  - 明亮风格 (light)
+  - 暗黑风格 (dark)
+  - 暖色风格 (warm)
+- 自适应内容宽度
+- 支持自定义主题
+
+** 安装
+
+*** 使用 straight.el
+#+begin_src emacs-lisp
+(straight-use-package
+ '(org-headline-card :type git
+                     :host github
+                     :repo "yibie/org-headline-card"))
+#+end_src
+
+*** 使用 use-package
+#+begin_src emacs-lisp
+(use-package org-headline-card
+  :straight (org-headline-card :type git
+                              :host github
+                              :repo "yibie/org-headline-card"))
+#+end_src
+
+** 基本使用
+
+1. 将光标移动到任意 Org 标题
+2. 执行 =M-x org-headline-card-at-point=
+3. 生成的卡片图片将保存在 =~/.emacs.d/headline-cards/= 目录下
+
+** 主题
+
+*** 内置主题
+
+提供六种精心设计的主题风格：
+
+- chinese-modern :: 现代中文风格，适合一般文档展示
+- chinese-ink :: 水墨风格，适合诗词、散文等文学内容
+- chinese-screen :: 屏风风格，适合古典文献展示
+- light :: 明亮风格，适合日常使用
+- dark :: 暗黑风格，适合夜间模式
+- warm :: 暖色风格，适合长时间阅读
+
+切换主题：
+
+使用 `M-x org-headline-card-set-theme` 切换主题
+
+也可以将常用主题添加到 emacs 配置文件中，如： 
+#+begin_src emacs-lisp
+(org-headline-card-set-theme 'chinese-ink)
+#+end_src
+
+*** 自定义主题
+
+**** 调整基础参数
+#+begin_src emacs-lisp
+(setq org-headline-card-base-theme
+      '((dpi . "300")                     ; 图片分辨率
+        (padding . "40")                  ; 内边距
+        (roundCorner . "40")             ; 圆角
+        (titleFontSize . "32")           ; 标题字号
+        (contentFontSize . "26")))       ; 正文字号
+#+end_src
+
+**** 创建个性化主题
+#+begin_src emacs-lisp
+;; 添加一个浅紫色主题
+(add-to-list 'org-headline-card-themes
+             '(purple-light . ((defaultFontName . "Microsoft YaHei")
+                              (defaultFontSize . "16")
+                              (backgroundColor . "#F8F5FF")
+                              (rectangleBorderColor . "#E6E0F3")
+                              (rectangleFontColor . "#2C2C2C")
+                              (rectangleBackgroundColor . "#FDFAFF"))))
+#+end_src
+
+** 依赖
+
+- Emacs 27.1+
+- Org-mode 9.4+
+- Java 运行环境
+- PlantUML
+
+** 许可证
+
+GPL-3.0 或更高版本
+
+** 贡献
+
+欢迎提交 Issue 和 Pull Request！
