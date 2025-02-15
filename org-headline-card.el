@@ -180,16 +180,14 @@ Must be a key present in `org-headline-card-themes'."
       (setf (alist-get (car setting) merged-theme) (cdr setting)))))
 
 (defun org-headline-card--headline-to-plantuml (headline)
-  "Convert HEADLINE org-element and its contents to PlantUML string."
+  "Convert HEADLINE org-element and its contents to PlantUML string.
+Ensures proper formatting of title, content, and list structure."
   (let* ((title (org-element-property :raw-value headline))
          (contents (org-headline-card--get-contents headline))
          (content-lines
           (when contents
             (org-headline-card--split-content contents)))
          (optimal-width (org-headline-card--calculate-width content-lines))
-         ;; Process title with wrapping
-         (wrapped-title
-          (mapconcat #'identity wrapped-title-lines "\\n"))
          (wrapped-lines
           (mapcan (lambda (line)
                    (if (string-empty-p line)
@@ -207,11 +205,16 @@ Must be a key present in `org-headline-card-themes'."
            "\n"))
          (title-size (alist-get 'titleFontSize theme-style))
          (content-size (alist-get 'contentFontSize theme-style)))
+    (message "最终处理内容:\n%s" 
+             (mapconcat (lambda (line)
+                         (if (equal line "\\n")
+                             "[空行]"
+                           line))
+                       wrapped-lines
+                       "\n"))
     (format "@startuml
 !theme plain
 !pragma layout smetana
-
-@startuml
 
 %s
 
@@ -220,23 +223,25 @@ rectangle \"<size:%s><b>%s</b></size>\\n\\n%s\" as card
 @enduml"
             style-str
             title-size
-            wrapped-title  ; 使用处理过的标题
+            (org-headline-card--process-title title)
             (mapconcat
              (lambda (line)
                (if (equal line "\\n")
-                   "\\n"
+                   "\\n" ; 保持空行
                  (format "<size:%s>%s</size>\\n" content-size line)))
              wrapped-lines
              ""))))
 
 (defun org-headline-card--get-contents (headline)
-  "Extract contents under HEADLINE, excluding PROPERTIES drawer and timestamps.
-Ensure proper spacing and alignment for non-list content."
+  "Extract and process contents under HEADLINE.
+Preserves list structure while removing metadata like PROPERTIES drawer and timestamps.
+Returns a string with proper formatting for both lists and paragraphs."
   (let ((begin (org-element-property :contents-begin headline))
         (end (org-element-property :contents-end headline))
         contents)
     (when (and begin end)
       (setq contents (buffer-substring-no-properties begin end))
+      (message "原始内容:\n%s" contents)
       (with-temp-buffer
         (insert contents)
         (goto-char (point-min))
@@ -263,168 +268,151 @@ Ensure proper spacing and alignment for non-list content."
                 nil t)
           (replace-match ""))
         ;; Process the remaining content
-        (let* ((raw-content (buffer-string))
-               ;; Split into paragraphs (double newline as separator)
-               (paragraphs (split-string raw-content "\n\n+" t))
-               ;; Process each paragraph
-               (formatted-paragraphs
-                (mapcar (lambda (para)
-                         ;; Remove leading/trailing whitespace
-                         (string-trim
-                          ;; Replace single newlines with spaces
-                          (replace-regexp-in-string "\n" " " para)))
-                       paragraphs)))
-          ;; Join paragraphs with double newlines
-          (mapconcat #'identity
-                    (seq-filter (lambda (para)
-                                (string-match-p "\\S-" para))
-                              formatted-paragraphs)
-                    "\n\n"))))))
+        (let ((raw-content (buffer-string)))
+          (message "清理后内容:\n%s" raw-content)
+          raw-content)))))
 
 (defun org-headline-card--split-content (content)
   "Split CONTENT into properly formatted lines while preserving order.
-Convert org-mode markup to creole format for PlantUML.
-Ensure proper spacing between paragraphs."
+Convert org-mode markup to PlantUML format while preserving list structure."
+  (message "开始分割内容:\n%s" content)
   (let* ((paragraphs (split-string content "\n\n+" t))
-         (result '()))
+         (result '())
+         (links '())  ; 存储所有链接
+         (link-counter 0))
     (dolist (para paragraphs)
       (let ((processed-para
              (thread-last para
-               ;; Process org-mode links
+               ;; 处理列表标记
                (replace-regexp-in-string
-                "\\[\\[.*?\\]\\[\\(.*?\\)\\]\\]"
-                "\\1")
-               ;; Process bold markup
+                "^\\s-*[-*+]\\s-*"
+                "• ")
+               
+               ;; 提取链接并替换为占位符
+               (replace-regexp-in-string
+                "\\[\\[\\(http[s]?://[^]]+?\\)\\]\\[\\([^]]+?\\)\\]\\]"
+                (lambda (match)
+                  (let* ((url (match-string 1 match))
+                         (desc (match-string 2 match))
+                         (placeholder (format "@@LINK_%d@@" link-counter)))
+                    ;; 保存链接信息
+                    (push (cons placeholder (cons desc url)) links)
+                    (cl-incf link-counter)
+                    desc)))  ; 只返回描述文本
+               
+               ;; 处理粗体
                (replace-regexp-in-string
                 "\\*\\([^*\n]+?\\)\\*"
                 "<b>\\1</b>")
-               ;; Process network links
-               (replace-regexp-in-string
-                "\\[\\[\\(http[s]?://.*?\\)\\]\\[\\(.*?\\)\\]\\]"
-                "[\\2](\\1)")
-               ;; Process italic markup with stricter pattern
+               
+               ;; 处理斜体（避免误匹配路径中的斜杠）
                (replace-regexp-in-string
                 "\\(?:^\\|[^/]\\)/\\([^/\n]+?\\)/\\(?:$\\|[^/]\\)"
                 "\\1<i>\\2</i>")
-               ;; Process underline markup
+               
+               ;; 处理下划线
                (replace-regexp-in-string
                 "_\\([^_\n]+?\\)_"
                 "<u>\\1</u>")
-               ;; Process strikethrough markup
+               
+               ;; 处理删除线
                (replace-regexp-in-string
                 "\\+\\([^+\n]+?\\)\\+"
                 "<s>\\1</s>")
-               ;; Process code markup
+               
+               ;; 处理代码和等宽字体
                (replace-regexp-in-string
-                "~\\([^~\n]+?\\)~"
-                "<code>\\1</code>")
-               ;; Process monospace markup
-               (replace-regexp-in-string
-                "=\\([^=\n]+?\\)="
-                "<code>\\1</code>")
-               ;; Process list markup
-               (replace-regexp-in-string
-                "^\\s-*[-*+]\\s-*"
-                "• "))))
-        ;; Add empty line between paragraphs
-        (when result
-          (push "" result))
+                "\\(?:~\\|=\\)\\([^~=\n]+?\\)\\(?:~\\|=\\)"
+                "<code>\\1</code>"))))
+        
+        (message "处理段落:\n%s\n变为:\n%s" para processed-para)
         (push processed-para result)))
-    (nreverse result)))
-
-(defun org-headline-card--clean-line (line)
-  "Clean up redundant list markers and normalize spacing in LINE."
-  (let ((cleaned-line
-         (thread-last line
-           ;; Remove redundant dashes (if already preceded by a bullet)
-           (replace-regexp-in-string "^\\(•\\)\\s-*-\\s-*" "\\1 ")
-           ;; Ensure single space after bullet
-           (replace-regexp-in-string "^\\(•\\)\\s-+" "\\1 ")
-           ;; Remove trailing whitespace
-           (replace-regexp-in-string "\\s-+$" ""))))
-    cleaned-line))
-
+    
+    ;; 添加链接到结果，不添加额外空行
+    (when links
+      (dolist (link (nreverse links))
+        (push (format "  <size:12><color:#666666>%s</color>" 
+                     (cddr link))
+              result)))
+    
+    (let ((final-result (nreverse result)))
+      (message "分割后内容:\n%s" (mapconcat #'identity final-result "\n"))
+      final-result)))
+      
 (defun org-headline-card--wrap-line (line width)
-  "Wrap LINE at WIDTH characters, preserving readability.
-Handles both list items and normal paragraphs appropriately."
+  "Wrap LINE at WIDTH characters, preserving format and readability.
+Handles both list items and normal text differently, with proper indentation
+and line breaks for Chinese text."
+  (message "开始换行处理:\n%s" line)
   (with-temp-buffer
-    (let ((fill-column width)
-          (result '())
-          (is-list-item (string-match-p "^\\s-*[-*+]\\s-+" line)))
-      ;; Set Chinese text wrapping properties
+    (let* ((fill-column (- width 4))  ; 减少填充宽度以适应缩进
+           (result '())
+           (is-list-item (string-match-p "^\\s-*•" line)))
+      
+      ;; 设置中文文本的填充属性
       (setq-local word-wrap-by-category t)
       (setq-local word-separating-categories
-                  '((?C . ?C) (?c . ?c)))
+                  '((?C . ?C)   ; 在中文字符间允许换行
+                    (?c . ?c)))
       
-      ;; Remove any existing line breaks and normalize spaces
-      (insert (replace-regexp-in-string "[ \n\t]+" " " line))
-      
-      ;; Calculate actual text width considering Chinese characters
-      (let* ((text-width (string-width (buffer-string)))
-             (need-wrap (> text-width width)))
-        
-        (if (not need-wrap)
-            ;; If text is shorter than width, return as single line
-            (list (if is-list-item
-                     (concat "• " (string-trim (buffer-string)))
-                   (string-trim (buffer-string))))
-          
-          ;; Text needs wrapping
-          (erase-buffer)
-          (insert line)
-          
-          ;; Try to break at punctuation first
-          (let ((break-points '())
-                (pos 1))
-            (while (< pos (point-max))
-              (when (string-match-p "[，。；：！？、]" (buffer-substring pos (1+ pos)))
-                (push pos break-points))
-              (setq pos (1+ pos)))
-            
-            (if break-points
-                ;; Use punctuation break points
-                (let ((current-pos (point-min))
-                      (current-line ""))
-                  (dolist (break-pos (nreverse break-points))
-                    (let ((segment (buffer-substring current-pos (1+ break-pos))))
-                      (if (> (+ (string-width current-line) (string-width segment)) width)
-                          (progn
-                            (push (string-trim current-line) result)
-                            (setq current-line segment))
-                        (setq current-line (concat current-line segment)))))
-                  (when (not (string-empty-p current-line))
-                    (push (string-trim current-line) result)))
-              
-              ;; Fall back to standard fill
-              (let ((adaptive-fill-mode nil))
+      ;; 处理列表项
+      (if is-list-item
+          ;; 列表项处理
+          (let* ((items (split-string line "• \\s-*" t))
+                 (indent "  "))
+            ;; 处理每个列表项
+            (dolist (item items)
+              (unless (string-empty-p item)
+                ;; 插入并填充当前项
+                (erase-buffer)
+                (insert item)
                 (fill-region (point-min) (point-max))
+                
+                ;; 收集处理后的行
                 (goto-char (point-min))
-                (while (not (eobp))
-                  (let ((current-line (string-trim
-                                     (buffer-substring-no-properties
-                                      (line-beginning-position)
-                                      (line-end-position)))))
-                    (unless (string-empty-p current-line)
-                      (push current-line result))
-                    (forward-line)))))
-            
-            ;; Add proper indentation for list items
-            (setq result (nreverse result))
-            (if is-list-item
-                (mapcar (lambda (line)
-                         (concat (if (= (length result) 1) "• " "  ") line))
-                       result)
-              result)))))))
+                (let ((first-line t))
+                  (while (not (eobp))
+                    (let ((current-line (buffer-substring (line-beginning-position)
+                                                        (line-end-position))))
+                      (push (concat 
+                             (if first-line
+                                 "• "  ; 第一行使用项目符号
+                               indent) ; 后续行使用缩进
+                             current-line)
+                            result)
+                      (setq first-line nil))
+                    (forward-line 1))))))
+        
+        ;; 普通段落处理
+        (insert line)
+        (fill-region (point-min) (point-max))
+        
+        ;; 收集处理后的行
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let* ((current-line (buffer-substring (line-beginning-position)
+                                               (line-end-position)))
+                 ;; 普通段落：第一行不缩进，后续行缩进
+                 (indented-line (if (= (line-number-at-pos) 1)
+                                  current-line
+                                (concat "  " current-line))))
+            (push indented-line result))
+          (forward-line 1)))
+      
+      ;; 返回处理后的行列表
+      (let ((final-result (nreverse result)))
+        (message "换行后内容:\n%s" (mapconcat #'identity final-result "\n"))
+        final-result))))
 
 (defun org-headline-card--process-title (title)
   "Process the title string for PlantUML."
   (let ((processed-title
          (thread-last title
-           ;; Process org-mode links, only keeping the description text
+           ;; 处理 org-mode 链接，只保留描述文本
            (replace-regexp-in-string
             "\\[\\[\\(?:[^][]\\|\\[\\(?:[^][]\\|\\[[^][]\\*\\]\\)*\\]\\)*\\]\\[\\(.*?\\)\\]\\]"
             "\\1")
-           ;; Process separators
+           ;; 处理分隔符
            (replace-regexp-in-string
             "|"
             "·"))))
