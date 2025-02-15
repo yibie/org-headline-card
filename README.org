@@ -21,9 +21,9 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
 
 ** DEMO
 
-[[./images/figure1.png][DEMO]]
+[[./images/figure1.png]]
 
-[[./images/figure2.png][DEMO]]
+[[./images/figure2.png]]
 
 ** Installation
 

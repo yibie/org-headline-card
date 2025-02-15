@@ -19,9 +19,9 @@
 
 ** DEMO
 
-[[./images/figure3.png][DEMO]]
+[[./images/figure3.png]]
 
-[[./images/figure4.png][DEMO]]
+[[./images/figure4.png]]
 
 *** 使用 straight.el
 #+begin_src emacs-lisp
