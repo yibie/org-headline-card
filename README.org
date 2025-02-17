@@ -33,14 +33,20 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
  '(org-headline-card :type git
                      :host github
                      :repo "yibie/org-headline-card"))
+
+(setq plantuml-default-exec-mode 'jar)
+(setq plantuml-jar-path "~/Documents/emacs/package/plantuml.jar") ;; to replace your plantuml.jar path with it. 
 #+end_src
 
 *** Using use-package
 #+begin_src emacs-lisp
 (use-package org-headline-card
   :straight (org-headline-card :type git
-                              :host github
-                              :repo "yibie/org-headline-card"))
+                               :host github
+                               :repo "yibie/org-headline-card"))
+
+(setq plantuml-default-exec-mode 'jar)
+(setq plantuml-jar-path "~/Documents/emacs/package/plantuml.jar") ;; to replace your plantuml.jar path with it. 
 #+end_src
 
 ** Basic Usage
