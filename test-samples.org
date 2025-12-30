@@ -21,9 +21,9 @@
 
 * Headline with Lists
   This is a list:
-  - First item
-  - Second item
-  - Third item with *bold*
+  - First item with *bold*
+  - /Second item/ with /italic/
+  - Third item with _underline_  
   - 中文列表项
 * Headline with Nested Content
   Description with multiple markup types.

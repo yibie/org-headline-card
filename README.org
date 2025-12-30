@@ -12,7 +12,7 @@ Convert Org-mode headlines and their contents into beautiful visual cards using 
 - Smaller output: ~1MB → ~10–40KB for similar content length (typical)
 - Interactive preview + exportable effects (highlight, glow, box outline, wavy underline)
 
-#+CAPTION: v0.3 output (placeholder)
+#+CAPTION: v0.3 output 
 [[./images/v0.3-output.png]]
 
 ** Features
@@ -31,12 +31,6 @@ Convert Org-mode headlines and their contents into beautiful visual cards using 
 - Fixed-width export (consistent card size)
 - Support custom themes
 - SVG renderer + ImageMagick export (no Java/PlantUML dependency)
-
-** DEMO
-
-[[./images/figure1.png]]
-
-[[./images/figure2.png]]
 
 ** Installation
 
@@ -91,7 +85,7 @@ Install ImageMagick:
    - =0= - Remove effect at point
    - =C-c C-c= - Clear all effects
 
-#+CAPTION: Preview + effects (placeholder)
+#+CAPTION: Preview + effects 
 [[./images/v0.3-preview.png]]
 
 *** Apply Effects (Preview)

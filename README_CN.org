@@ -9,7 +9,7 @@
 - 图片体积：相同内容长度从约 1MB 降到约 10~40KB（典型值）
 - 新增交互式预览与可导出的特效（高亮、光晕、描边框、波浪线）
 
-#+CAPTION: v0.3 导出效果（占位符）
+#+CAPTION: v0.3 导出效果
 [[./images/v0.3-output.png]]
 
 ** 功能特点
@@ -26,28 +26,6 @@
 - 固定宽度导出（卡片宽度一致）
 - 支持自定义主题
 - 将链接从正文中提取，以灰色字体列表形式显示在卡片底部
-
-** DEMO
-
-[[./images/figure3.png]]
-
-[[./images/figure4.png]]
-
-*** 使用 straight.el
-#+begin_src emacs-lisp
-(straight-use-package
- '(org-headline-card :type git
-                     :host github
-                     :repo "yibie/org-headline-card"))
-#+end_src
-
-*** 使用 use-package
-#+begin_src emacs-lisp
-(use-package org-headline-card
-  :straight (org-headline-card :type git
-                              :host github
-                              :repo "yibie/org-headline-card"))
-#+end_src
 
 ** 基本使用
 
@@ -73,7 +51,7 @@
    - =0= 移除光标处的特效
    - =C-c C-c= 清空所有特效
 
-#+CAPTION: 预览与特效（占位符）
+#+CAPTION: 预览与特效
 [[./images/v0.3-preview.png]]
 
 *** 添加更多特效（预览中）
