@@ -2,6 +2,16 @@
 
 将 Org-mode 标题及其内容转换为精美的预览卡片图片。
 
+** v0.3 更新要点
+
+- 渲染引擎：PlantUML → SVG + ImageMagick（不再依赖 Java/PlantUML）
+- 导出速度：相同内容长度从约 1~3s 降到 1s 以内（典型值）
+- 图片体积：相同内容长度从约 1MB 降到约 10~40KB（典型值）
+- 新增交互式预览与可导出的特效（高亮、光晕、描边框、波浪线）
+
+#+CAPTION: v0.3 导出效果（占位符）
+[[./images/v0.3-output.png]]
+
 ** 功能特点
 
 - 将 Org 标题转换为可视化卡片
@@ -10,10 +20,10 @@
   - 现代中文风格 (chinese-modern)
   - 水墨风格 (chinese-ink)
   - 屏风风格 (chinese-screen)
-  - 明亮风格 (light)
-  - 暗黑风格 (dark)
-  - 暖色风格 (warm)
-- 自适应内容宽度
+- 明亮风格 (light)
+- 暗黑风格 (dark)
+- 暖色风格 (warm)
+- 固定宽度导出（卡片宽度一致）
 - 支持自定义主题
 - 将链接从正文中提取，以灰色字体列表形式显示在卡片底部
 
@@ -44,6 +54,34 @@
 1. 将光标移动到任意 Org 标题
 2. 执行 =M-x org-headline-card-at-point=
 3. 生成的卡片图片将保存在 =~/.emacs.d/headline-cards/= 目录下
+
+*** 预览（Preview）
+
+1. 将光标移动到任意 Org 标题
+2. 执行 =M-x org-headline-card-preview=
+3. 在预览缓冲区中可用快捷键：
+   - =q= 退出
+   - =r= 刷新
+   - =t= 切换主题
+   - =b= 切换边框
+   - =e= 编辑内容
+   - =RET= 导出图片
+   - =h= 背景高亮（特效）
+   - =g= 文字光晕（特效）
+   - =s= 文本描边框（特效）
+   - =w= 波浪下划线（特效）
+   - =0= 移除光标处的特效
+   - =C-c C-c= 清空所有特效
+
+#+CAPTION: 预览与特效（占位符）
+[[./images/v0.3-preview.png]]
+
+*** 添加更多特效（预览中）
+
+- 选中区域（或将光标放在单词上）后按 =h/g/s/w= 应用特效
+- 特效会随 =RET= 导出到图片中
+- 特效仅支持单行（跨行选择会报错）
+- 通过前缀参数自定义颜色/宽度：例如 =C-u h=、=C-u s=
 
 ** 主题
 
@@ -129,6 +167,8 @@
 - Ubuntu/Debian: =sudo apt-get install imagemagick=
 - Arch Linux: =sudo pacman -S imagemagick=
 - Windows: 从 https://imagemagick.org/script/download.php 下载
+
+小提示：可以运行 =M-x org-headline-card-check-dependencies= 检查依赖是否齐全。
 
 ** 许可证
 

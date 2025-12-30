@@ -5,6 +5,16 @@
 
 Convert Org-mode headlines and their contents into beautiful visual cards using Emacs text-properties and character art borders.
 
+** What's New (v0.3)
+
+- Rendering engine: PlantUML → SVG + ImageMagick (no Java/PlantUML required)
+- Faster export: ~1–3s → <1s for similar content length (typical)
+- Smaller output: ~1MB → ~10–40KB for similar content length (typical)
+- Interactive preview + exportable effects (highlight, glow, box outline, wavy underline)
+
+#+CAPTION: v0.3 output (placeholder)
+[[./images/v0.3-output.png]]
+
 ** Features
 
 - Convert Org headlines into visual cards
@@ -18,9 +28,9 @@ Convert Org-mode headlines and their contents into beautiful visual cards using 
   - Warm theme (warm)
 - Character art border themes (elegant, classic, minimal)
 - Interactive preview system with live theme switching
-- Adaptive content width
+- Fixed-width export (consistent card size)
 - Support custom themes
-- NO Java or PlantUML dependency!
+- SVG renderer + ImageMagick export (no Java/PlantUML dependency)
 
 ** DEMO
 
@@ -74,6 +84,23 @@ Install ImageMagick:
    - =b= - Switch border theme
    - =e= - Edit content
    - =RET= - Export to image
+   - =h= - Highlight background (effect)
+   - =g= - Text glow (effect)
+   - =s= - Text box outline (effect)
+   - =w= - Wavy underline (effect)
+   - =0= - Remove effect at point
+   - =C-c C-c= - Clear all effects
+
+#+CAPTION: Preview + effects (placeholder)
+[[./images/v0.3-preview.png]]
+
+*** Apply Effects (Preview)
+
+- Select a region (or place point on a word), then press:
+  - =h= (highlight), =g= (glow), =s= (box outline), =w= (wavy underline)
+- Effects are exportable: press =RET= in preview to export with effects.
+- Effects are limited to a single visual line; cross-line regions will raise an error.
+- Customize colors/widths with a prefix arg, e.g. =C-u h= / =C-u s=.
 
 ** Theme 
 
@@ -154,6 +181,8 @@ Available theme parameters:
 - Emacs 27.1+
 - Org-mode 9.4+
 - ImageMagick (convert or magick)
+
+Tip: run =M-x org-headline-card-check-dependencies= to verify your setup.
 
 ** Migration from v0.1.x
 
