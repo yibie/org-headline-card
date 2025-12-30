@@ -3,7 +3,7 @@
 
 * Org Headline Card
 
-Convert Org-mode headlines and their contents into beautiful visual cards.
+Convert Org-mode headlines and their contents into beautiful visual cards using Emacs text-properties and character art borders.
 
 ** Features
 
@@ -16,8 +16,11 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
   - Light theme (light)
   - Dark theme (dark)
   - Warm theme (warm)
+- Character art border themes (elegant, classic, minimal)
+- Interactive preview system with live theme switching
 - Adaptive content width
 - Support custom themes
+- NO Java or PlantUML dependency!
 
 ** DEMO
 
@@ -27,7 +30,20 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
 
 ** Installation
 
-*** Example
+*** Prerequisites
+
+1. Emacs 27.1+
+2. Org-mode 9.4+
+3. ImageMagick (for image export)
+
+Install ImageMagick:
+
+- macOS: =brew install imagemagick=
+- Ubuntu/Debian: =sudo apt-get install imagemagick=
+- Arch Linux: =sudo pacman -S imagemagick=
+- Windows: Download from https://imagemagick.org/script/download.php
+
+*** Example Configuration
 #+begin_src emacs-lisp
 (use-package org-headline-card
   :straight (org-headline-card :type git
@@ -35,15 +51,29 @@ Convert Org-mode headlines and their contents into beautiful visual cards.
                                :repo "yibie/org-headline-card"))
 
 (setq org-headline-card-directory "~/card/") ;; set output path
-(setq plantuml-default-exec-mode 'jar)
-(setq plantuml-jar-path "~/Documents/emacs/package/plantuml.jar") ;; to replace your plantuml.jar path with it. 
+(org-headline-card-set-theme 'chinese-ink)     ;; set default theme
+(org-headline-card-set-border-theme 'elegant)  ;; set border style
 #+end_src
 
 ** Basic Usage
 
+*** Generate Card
+
 1. Move cursor to any Org headline
 2. Execute =M-x org-headline-card-at-point=
-3. Generated card images will be saved in =~/.emacs.d/headline-cards/=
+3. Generated card images will be saved in configured directory
+
+*** Preview Card
+
+1. Move cursor to any Org headline
+2. Execute =M-x org-headline-card-preview=
+3. Preview buffer opens with interactive controls:
+   - =q= - Quit preview
+   - =r= - Refresh preview
+   - =t= - Switch color theme
+   - =b= - Switch border theme
+   - =e= - Edit content
+   - =RET= - Export to image
 
 ** Theme 
 
@@ -73,31 +103,66 @@ You can also add common themes to your emacs configuration file, for example:
 **** Adjust Base Parameters
 #+begin_src emacs-lisp
 (setq org-headline-card-base-theme
-      '((dpi . "300")                     ; Image resolution
-        (padding . "40")                  ; Padding
-        (roundCorner . "40")             ; Corner radius
-        (titleFontSize . "32")           ; Title font size
-        (contentFontSize . "26")))       ; Content font size
+      '((padding . "40")                  ; Padding
+        (roundCorner . "40")              ; Corner radius
+        (titleFontSize . "32")            ; Title font size
+        (contentFontSize . "26")))        ; Content font size
 #+end_src
 
 **** Create Personal Theme
 #+begin_src emacs-lisp
 ;; Add a light purple theme
 (add-to-list 'org-headline-card-themes
-             '(purple-light . ((defaultFontName . "Microsoft YaHei")
-                              (defaultFontSize . "16")
-                              (backgroundColor . "#F8F5FF")
-                              (rectangleBorderColor . "#E6E0F3")
-                              (rectangleFontColor . "#2C2C2C")
-                              (rectangleBackgroundColor . "#FDFAFF"))))
+             '(purple-light . ((defaultFontName . "LXGW WenKai Mono")
+                               (defaultFontSize . "16")
+                               (backgroundColor . "#F8F5FF")
+                               (rectangleBorderColor . "#E6E0F3")
+                               (rectangleFontColor . "#2C2C2C")
+                               (rectangleBackgroundColor . "#FDFAFF"))))
+#+end_src
+
+Available theme parameters:
+- =defaultFontName= :: Font family name
+- =defaultFontSize= :: Default font size
+- =backgroundColor= :: Background color
+- =rectangleBorderColor= :: Border color
+- =rectangleFontColor= :: Text color
+- =rectangleBackgroundColor= :: Card background color
+- =backgroundGradient= :: Background gradient (SVG format)
+- =backgroundGradientType= :: Gradient type ('linear or 'radial)
+- =backgroundImage= :: Background image path
+- =backgroundImageOpacity= :: Background image opacity
+- =backgroundPattern= :: Built-in pattern ('dots, 'grid, 'lines, 'cross-lines, 'waves)
+- =backgroundPatternColor= :: Pattern color
+- =backgroundPatternOpacity= :: Pattern opacity
+
+*** Export Settings
+
+#+begin_src emacs-lisp
+;; Maximum width for exported images (in characters, default 50)
+(setq org-headline-card-export-width 50)
+
+;; Export DPI (default 72, set to 144 for 2x retina quality)
+(setq org-headline-card-export-dpi 72)
+
+;; Export font size (default 16)
+(setq org-headline-card-export-font-size 16)
 #+end_src
 
 ** Dependencies
 
 - Emacs 27.1+
 - Org-mode 9.4+
-- Java Runtime Environment
-- PlantUML
+- ImageMagick (convert or magick)
+
+** Migration from v0.1.x
+
+If you're upgrading from the old PlantUML-based version:
+
+1. ✨ PlantUML and Java are NO LONGER REQUIRED
+2. Install ImageMagick (see Prerequisites above)
+3. Remove old PlantUML configuration from your config file
+4. Everything else works the same!
 
 ** License
 

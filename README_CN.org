@@ -72,31 +72,63 @@
 **** 调整基础参数
 #+begin_src emacs-lisp
 (setq org-headline-card-base-theme
-      '((dpi . "300")                     ; 图片分辨率
-        (padding . "40")                  ; 内边距
-        (roundCorner . "40")             ; 圆角
-        (titleFontSize . "32")           ; 标题字号
-        (contentFontSize . "26")))       ; 正文字号
+      '((padding . "40")                  ; 内边距
+        (roundCorner . "40")              ; 圆角
+        (titleFontSize . "32")            ; 标题字号
+        (contentFontSize . "26")))        ; 正文字号
 #+end_src
 
 **** 创建个性化主题
 #+begin_src emacs-lisp
 ;; 添加一个浅紫色主题
 (add-to-list 'org-headline-card-themes
-             '(purple-light . ((defaultFontName . "Microsoft YaHei")
-                              (defaultFontSize . "16")
-                              (backgroundColor . "#F8F5FF")
-                              (rectangleBorderColor . "#E6E0F3")
-                              (rectangleFontColor . "#2C2C2C")
-                              (rectangleBackgroundColor . "#FDFAFF"))))
+             '(purple-light . ((defaultFontName . "LXGW WenKai Mono")
+                               (defaultFontSize . "16")
+                               (backgroundColor . "#F8F5FF")
+                               (rectangleBorderColor . "#E6E0F3")
+                               (rectangleFontColor . "#2C2C2C")
+                               (rectangleBackgroundColor . "#FDFAFF"))))
+#+end_src
+
+主题可用参数：
+- =defaultFontName= :: 字体名称
+- =defaultFontSize= :: 默认字号
+- =backgroundColor= :: 背景色
+- =rectangleBorderColor= :: 边框颜色
+- =rectangleFontColor= :: 文字颜色
+- =rectangleBackgroundColor= :: 卡片背景色
+- =backgroundGradient= :: 背景渐变（SVG 格式）
+- =backgroundGradientType= :: 渐变类型（'linear 或 'radial）
+- =backgroundImage= :: 背景图片路径
+- =backgroundImageOpacity= :: 背景图片透明度
+- =backgroundPattern= :: 内置纹理（'dots, 'grid, 'lines, 'cross-lines, 'waves）
+- =backgroundPatternColor= :: 纹理颜色
+- =backgroundPatternOpacity= :: 纹理透明度
+
+** 导出配置
+
+#+begin_src emacs-lisp
+;; 导出图片最大宽度（字符数，默认 50）
+(setq org-headline-card-export-width 50)
+
+;; 导出图片 DPI（默认 72，可设为 144 获得 2x 清晰度）
+(setq org-headline-card-export-dpi 72)
+
+;; 导出字号（默认 16）
+(setq org-headline-card-export-font-size 16)
 #+end_src
 
 ** 依赖
 
 - Emacs 27.1+
 - Org-mode 9.4+
-- Java 运行环境
-- PlantUML
+- ImageMagick（convert 或 magick）
+
+安装 ImageMagick：
+- macOS: =brew install imagemagick=
+- Ubuntu/Debian: =sudo apt-get install imagemagick=
+- Arch Linux: =sudo pacman -S imagemagick=
+- Windows: 从 https://imagemagick.org/script/download.php 下载
 
 ** 许可证
 

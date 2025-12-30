@@ -1,0 +1,24 @@
+#+TITLE: Theme Compatibility Test
+
+* Test 1: Elegant Border + Chinese Modern Theme
+  This tests the elegant double-line border with modern Chinese style.
+  包含*粗体*和/斜体/文本。
+
+* Test 2: Classic Border + Dark Theme
+  This tests the classic single-line border with dark theme colors.
+  Has *bold*, /italic/, and ~code~.
+
+* Test 3: Minimal Border + Warm Theme
+  This tests the minimal border with warm color scheme.
+  Simple text content.
+
+* Test 4: All Border Styles with Light Theme
+  Testing border theme switching.
+
+* Test 5: Chinese Ink Theme with Elegant Border
+  墨水风格主题测试，包含传统中文字符。
+  检查边框与中文字符的兼容性。
+
+* Test 6: Screen Theme with Classic Border
+  屏幕风格边框测试
+  检查传统中式风格的显示效果。

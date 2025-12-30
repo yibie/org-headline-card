@@ -1,0 +1,98 @@
+#+TITLE: Org Headline Card Style Library Plan
+#+DATE: 2025-12-30
+
+* Goal
+Provide an extensible “style library” so users can develop and share:
+- themes (fonts/colors/spacing),
+- border styles (preview decoration + export vector border),
+- backgrounds (solid/gradient/pattern/image/combined),
+without patching core files.
+
+* Why
+1. Avoid “ad-hoc keys in a big plist” becoming unmaintainable.
+2. Keep *one canonical layout* for text wrapping/indent rules, then let styles affect presentation only.
+3. Allow third-party style packs distributed as:
+   - Emacs packages (MELPA / git),
+   - or local drop-in files in a user directory.
+
+* Architecture
+** Canonical Layout (single source of truth)
+- Input: Org headline element + theme metadata (mainly font sizes/width).
+- Output: borderless canonical lines with text-properties.
+- Consumers:
+  - preview: decorates canonical lines (ASCII border, interactive effect UI),
+  - export: renders canonical lines to SVG/PNG.
+
+** Registries (like the effect system)
+Introduce registries + register APIs:
+
+*** Theme Registry
+`org-headline-card-themes` stays as user-facing default, but extend with:
+- `org-headline-card-register-theme`
+- `org-headline-card-get-theme`
+
+Theme should primarily provide semantic keys (font, colors, spacing), not SVG snippets.
+
+*** Border Theme Registry
+Split border into two layers:
+1) preview border (character art) = current `org-headline-card-border-themes`
+2) export border (SVG) = parameters or a render function
+
+Provide:
+- `org-headline-card-register-border-theme`
+- `org-headline-card-get-border-theme`
+
+*** Background Provider Registry
+Background becomes a first-class plugin:
+- `org-headline-card-register-background`
+- `org-headline-card-get-background`
+
+Background provider returns two parts:
+1) `<defs>` additions (e.g., patterns, gradients, embedded image),
+2) background elements (e.g., `<rect fill="url(#...)">` layers).
+
+This avoids mixing background logic into the core SVG renderer.
+
+* SVG Background Capabilities (targets)
+** Patterns (texture)
+- Built-in patterns: dots/grid/lines/cross-lines/waves (already present).
+- Add “custom pattern tile” API:
+  - user supplies a tile size + SVG snippet generator (string/function),
+  - core wraps it in `<pattern ...>` and applies as an overlay.
+
+** Images
+- Embed local image to SVG via base64 `<image>` inside `<pattern>`.
+- Provide fit modes mapped to `preserveAspectRatio`:
+  - cover / contain / stretch
+- Allow opacity and optional overlay pattern on top.
+
+** Gradients
+- Support linear/radial gradients.
+- Let users provide stop list, or a generator function.
+
+** Clipping / Mask
+- Use `clipPath` or `mask` so background respects rounded corners cleanly.
+
+* Distribution & Loading
+** Option A: Emacs package style packs
+- Users install `org-headline-card-style-foo` packages.
+- Each style pack calls the register APIs in its `*-style-foo.el`.
+
+** Option B: Drop-in local directory
+Add:
+- `defcustom org-headline-card-style-load-paths`
+- `org-headline-card-load-style-libraries`
+
+Convention:
+- Files named `org-headline-card-style-*.el` are auto-loaded.
+
+* Compatibility Notes
+- Keep `org-headline-card-export-width` fixed by default (consistent publishing).
+- Effects remain anchored to canonical lines (line-text + display columns).
+- Cross-line selection for effects remains disallowed (error + do not apply).
+
+* Next Steps
+1. Extract style registries + registration APIs (theme/border/background).
+2. Refactor export SVG generator to consume “background provider” output.
+3. Provide one “example style pack” in-tree to document the extension points.
+

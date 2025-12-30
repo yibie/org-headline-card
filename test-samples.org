@@ -1,0 +1,36 @@
+#+TITLE: Test Samples for org-headline-card
+
+* Simple Headline
+  This is a simple headline with plain text content.
+
+* Headline with Bold
+  This content has *bold text* in the middle.
+
+* Headline with Italic
+  This content has /italic text/ for emphasis.
+
+* Headline With Underline
+  This content has _underlined text_ for highlighting.
+
+* Headline with Code
+  This content has ~code snippets~ inline.
+
+* Headline with Mixed Markup
+  This has *bold*, /italic/, _underline_, and ~code~ all together.
+
+
+* Headline with Lists
+  This is a list:
+  - First item
+  - Second item
+  - Third item with *bold*
+  - 中文列表项
+* Headline with Nested Content
+  Description with multiple markup types.
+  See https://example.com for more info.
+
+* Empty Headline
+
+* 长标题测试
+  This headline tests CJK character support with mixed content.
+  包含中文和 English 混合文本。

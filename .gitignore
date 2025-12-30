@@ -1,0 +1,10 @@
+.DS_Store
+
+# Local assistant/tooling artifacts
+.claude/
+.gemini-clipboard/
+.phrase/
+
+# Local dev helpers (keep out of published package by default)
+reload-package.el
+test-properties.el
